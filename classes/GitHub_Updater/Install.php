@@ -41,6 +41,8 @@ class Install {
 	public function __construct( $type ) {
 		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php'; // Need for upgrade classes.
 		$this->install( $type );
+
+		wp_enqueue_script( 'settings', plugins_url( basename( dirname( dirname( __DIR__ ) ) ) . '/js/settings.js' ), array(), false, true );
 	}
 
 	/**
@@ -261,7 +263,7 @@ class Install {
 	public function is_private() {
 		?>
 		<label for="is_private">
-			<input type="checkbox" name="is_private" <?php checked( '1', false, true ) ?> >
+			<input class="bitbucket_setting" type="checkbox" name="is_private" <?php checked( '1', false, true ) ?> >
 		</label>
 		<?php
 	}
@@ -272,7 +274,7 @@ class Install {
 	public function access_token() {
 		?>
 		<label for="github_access_token">
-			<input type="text" style="width:50%;" name="github_access_token" value="" >
+			<input class="github_setting" type="text" style="width:50%;" name="github_access_token" value="" >
 			<p class="description">
 				<?php _e( 'Enter GitHub Access Token for private GitHub repositories.', 'github-updater' ) ?>
 			</p>
