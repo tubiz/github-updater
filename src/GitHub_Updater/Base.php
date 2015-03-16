@@ -112,9 +112,10 @@ class Base {
 		$ghu_extra_headers   = array(
 			'GitHub Plugin URI'    => 'GitHub Plugin URI',
 			'GitHub Branch'        => 'GitHub Branch',
-			'GitHub Access Token'  => 'GitHub Access Token',
 			'Bitbucket Plugin URI' => 'Bitbucket Plugin URI',
 			'Bitbucket Branch'     => 'Bitbucket Branch',
+			'GitLab Plugin URI'    => 'GitLab Plugin URI',
+			'GitLab Branch'        => 'GitLab Branch',
 			'Requires WP'          => 'Requires WP',
 			'Requires PHP'         => 'Requires PHP',
 		);
@@ -134,9 +135,10 @@ class Base {
 		$ghu_extra_headers   = array(
 			'GitHub Theme URI'    => 'GitHub Theme URI',
 			'GitHub Branch'       => 'GitHub Branch',
-			'GitHub Access Token' => 'GitHub Access Token',
 			'Bitbucket Theme URI' => 'Bitbucket Theme URI',
 			'Bitbucket Branch'    => 'Bitbucket Branch',
+			'GitLab Theme URI'    => 'GitLab Theme URI',
+			'GitLab Branch'        => 'GitLab Branch',
 			'Requires WP'         => 'Requires WP',
 			'Requires PHP'        => 'Requires PHP',
 		);
@@ -162,7 +164,8 @@ class Base {
 
 		foreach ( (array) $plugins as $plugin => $headers ) {
 			if ( empty( $headers['GitHub Plugin URI'] ) &&
-				empty( $headers['Bitbucket Plugin URI'] )
+			     empty( $headers['Bitbucket Plugin URI'] ) &&
+			     empty( $headers['GitLab Plugin URI'] )
 			) {
 				continue;
 			}
@@ -256,6 +259,34 @@ class Base {
 			}
 		}
 
+		foreach ( (array) self::$extra_headers as $value ) {
+			if ( ! empty( $git_repo['type'] ) && 'gitlab_plugin' !== $git_repo['type'] ) {
+				continue;
+			}
+			switch( $value ) {
+				case 'GitLab Plugin URI':
+					if ( empty( $headers['GitLab Plugin URI'] ) ) {
+						break;
+					}
+					$git_repo['type']       = 'gitlab_plugin';
+
+					$owner_repo             = parse_url( $headers['GitLab Plugin URI'], PHP_URL_PATH );
+					$owner_repo             = trim( $owner_repo, '/' );  // strip surrounding slashes
+					$git_repo['uri']        = 'https://gitlab.com/' . $owner_repo;
+					$owner_repo             = explode( '/', $owner_repo );
+					$git_repo['owner']      = $owner_repo[0];
+					$git_repo['repo']       = $owner_repo[1];
+					$git_repo['local_path'] = WP_PLUGIN_DIR . '/' . $git_repo['repo'] .'/';
+					break;
+				case 'GitLab Branch':
+					if ( empty( $headers['GitLab Branch'] ) ) {
+						break;
+					}
+					$git_repo['branch']     = $headers['GitLab Branch'];
+					break;
+			}
+		}
+
 		return $git_repo;
 	}
 
@@ -278,8 +309,10 @@ class Base {
 			$github_branch     = $theme->get( 'GitHub Branch' );
 			$bitbucket_uri     = $theme->get( 'Bitbucket Theme URI' );
 			$bitbucket_branch  = $theme->get( 'Bitbucket Branch' );
+			$gitlab_uri        = $theme->get( 'GitLab Theme URI' );
+			$gitlab_branch     = $theme->get( 'GitLab Branch' );
 
-			if ( empty( $github_uri ) && empty( $bitbucket_uri ) ) {
+			if ( empty( $github_uri ) && empty( $bitbucket_uri ) && empty( $gitlab_uri ) ) {
 				continue;
 			}
 
@@ -350,6 +383,40 @@ class Base {
 				}
 			}
 
+			foreach ( (array) self::$extra_headers as $value ) {
+				if ( ! empty( $git_theme['type'] ) && 'gitlab_theme' !== $git_theme['type'] ) {
+					continue;
+				}
+
+				switch( $value ) {
+					case 'GitLab Theme URI':
+						if ( empty( $gitlab_uri ) ) {
+							break;
+						}
+						$git_theme['type']                    = 'gitlab_theme';
+
+						$owner_repo                           = parse_url( $gitlab_uri, PHP_URL_PATH );
+						$owner_repo                           = trim( $owner_repo, '/' );
+						$git_theme['uri']                     = 'https://gitlab.com/' . $owner_repo;
+						$owner_repo                           = explode( '/', $owner_repo );
+						$git_theme['owner']                   = $owner_repo[0];
+						$git_theme['repo']                    = $owner_repo[1];
+						$git_theme['name']                    = $theme->get( 'Name' );
+						$git_theme['theme_uri']               = $theme->get( 'ThemeURI' );
+						$git_theme['author']                  = $theme->get( 'Author' );
+						$git_theme['local_version']           = strtolower( $theme->get( 'Version' ) );
+						$git_theme['sections']['description'] = $theme->get( 'Description' );
+						$git_theme['local_path']              = get_theme_root() . '/' . $git_theme['repo'] .'/';
+						break;
+					case 'GitLab Branch':
+						if ( empty( $gitlab_branch ) ) {
+							break;
+						}
+						$git_theme['branch']                  = $gitlab_branch;
+						break;
+				}
+			}
+
 			$git_themes[ $theme->stylesheet ] = (object) $git_theme;
 		}
 
@@ -386,7 +453,7 @@ class Base {
 		$this->$type->forks                 = 0;
 		$this->$type->open_issues           = 0;
 		$this->$type->score                 = 0;
-		$this->$type->requires_wp_version   = '0.0.0';
+		$this->$type->requires_wp_version   = '3.8.0';
 		$this->$type->requires_php_version  = '5.3';
 	}
 
