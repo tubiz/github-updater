@@ -218,6 +218,34 @@ class Settings extends Base {
 		}
 
 		/**
+		 * Add settings for GitLab Domain and Private Token.
+		 */
+		add_settings_section(
+			'gitlab_details',
+			__( 'GitLab Access Details', 'github-updater' ),
+			array( $this, 'print_section_gitlab_info' ),
+			'github_updater_install_settings'
+		);
+
+		add_settings_field(
+			'gitlab_domain',
+			__( 'GitLab Domain', 'github-updater' ),
+			array( $this, 'token_callback_text' ),
+			'github_updater_install_settings',
+			'gitlab_details',
+			'gitlab_domain'
+		);
+
+		add_settings_field(
+			'gitlab_private_token',
+			__( 'GitLab Private Token', 'github-updater' ),
+			array( $this, 'token_callback_text' ),
+			'github_updater_install_settings',
+			'gitlab_details',
+			'gitlab_private_token'
+		);
+
+		/**
 		 * Show if no private repositories are present.
 		 */
 		if ( ! self::$github_private && ! self::$bitbucket_private ) {
@@ -301,6 +329,8 @@ class Settings extends Base {
 		$ghu_unset_keys = array_diff_key( parent::$options, $ghu_options_keys );
 		unset( $ghu_unset_keys['bitbucket_username'] );
 		unset( $ghu_unset_keys['bitbucket_password'] );
+		unset( $ghu_unset_keys['gitlab_domain'] );
+		unset( $ghu_unset_keys['gitlab_private_token'] );
 		if ( ! empty( $ghu_unset_keys ) ) {
 			foreach ( $ghu_unset_keys as $key => $value ) {
 				unset( parent::$options [ $key ] );
@@ -343,6 +373,13 @@ class Settings extends Base {
 	 */
 	public function print_section_bitbucket_username() {
 		_e( 'Enter your personal Bitbucket username and password.', 'github-updater' );
+	}
+
+	/**
+	 * Print the GitLab text.
+	 */
+	public function print_section_gitlab_info() {
+		_e( 'Enter your GitLab domain and private token.', 'github-updater' );
 	}
 
 	/**
